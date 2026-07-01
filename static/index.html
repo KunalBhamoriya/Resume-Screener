@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Resume Screener — AI-Powered</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0f17;
+      --card:    #1a1e2e;
+      --border:  rgba(255,255,255,0.08);
+      --accent1: #6c63ff;
+      --accent2: #a78bfa;
+      --accent3: #34d399;
+      --danger:  #f87171;
+      --amber:   #fbbf24;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --radius:  14px;
+      --shadow:  0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%,  rgba(108,99,255,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 100%, rgba(167,139,250,.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%,  rgba(52,211,153,.06) 0%, transparent 60%);
+    }
+
+    /* ── Header ── */
+    header { text-align: center; padding: 52px 20px 36px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(108,99,255,.15); border: 1px solid rgba(108,99,255,.35);
+      color: var(--accent2); font-size: 12px; font-weight: 600; letter-spacing: .06em;
+      padding: 5px 14px; border-radius: 999px; margin-bottom: 18px; text-transform: uppercase;
+    }
+    .badge::before { content: '✦'; }
+    h1 {
+      font-size: clamp(28px, 5vw, 52px); font-weight: 800; line-height: 1.15;
+      background: linear-gradient(135deg, #fff 20%, var(--accent2) 60%, var(--accent3) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .subtitle { color: var(--muted); font-size: 15px; margin-top: 10px; max-width: 520px; margin-inline: auto; }
+
+    /* ── Layout ── */
+    main { max-width: 1160px; margin: 0 auto; padding: 0 20px 80px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow);
+      transition: border-color .2s;
+    }
+    .card:focus-within { border-color: rgba(108,99,255,.45); }
+    .card-title {
+      font-size: 13px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--accent2);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .card-title span { font-size: 16px; }
+
+    /* ── Forms ── */
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .05em; margin-bottom: 6px; }
+
+    textarea, input[type="text"] {
+      width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: inherit; font-size: 14px;
+      padding: 12px 14px; resize: vertical; transition: border-color .2s, box-shadow .2s; outline: none;
+    }
+    textarea:focus, input[type="text"]:focus {
+      border-color: var(--accent1); box-shadow: 0 0 0 3px rgba(108,99,255,.15);
+    }
+    textarea { min-height: 220px; }
+    input[type="text"] { min-height: 42px; }
+    .mb-10 { margin-bottom: 10px; }
+
+    /* ── Resume blocks ── */
+    #resume-list { display: flex; flex-direction: column; gap: 16px; }
+    .resume-block {
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; animation: slideIn .25s ease; position: relative;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .resume-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .resume-num { font-size: 11px; font-weight: 700; color: var(--accent1); text-transform: uppercase; letter-spacing: .08em; }
+    .btn-remove {
+      background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px;
+      line-height: 1; padding: 2px 6px; border-radius: 6px; transition: background .15s;
+    }
+    .btn-remove:hover { background: rgba(248,113,113,.15); }
+
+    /* ── PDF Upload Zone ── */
+    .upload-zone {
+      border: 1.5px dashed rgba(108,99,255,.35);
+      border-radius: 10px; background: rgba(108,99,255,.05);
+      padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .upload-zone:hover { border-color: var(--accent1); background: rgba(108,99,255,.1); }
+    .upload-zone.dragover { border-color: var(--accent3); background: rgba(52,211,153,.08); }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .upload-icon { font-size: 22px; flex-shrink: 0; }
+    .upload-text { flex: 1; }
+    .upload-text strong { font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+    .upload-text small { font-size: 11px; color: var(--muted); }
+
+    .upload-status {
+      display: none; align-items: center; gap: 8px; font-size: 12px; font-weight: 600;
+      padding: 8px 12px; border-radius: 8px; margin-bottom: 8px;
+    }
+    .upload-status.loading { display: flex; background: rgba(108,99,255,.12); color: var(--accent2); }
+    .upload-status.success { display: flex; background: rgba(52,211,153,.12); color: var(--accent3); }
+    .upload-status.error   { display: flex; background: rgba(248,113,113,.12); color: var(--danger); }
+
+    .mini-spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(167,139,250,.3);
+      border-top-color: var(--accent2); border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* textarea with PDF pill shown on top */
+    .textarea-wrap { position: relative; }
+    .pdf-pill {
+      display: none; align-items: center; gap: 6px;
+      background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.25);
+      color: var(--accent3); font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 999px; margin-bottom: 6px;
+      width: fit-content;
+    }
+    .pdf-pill.visible { display: flex; }
+
+    /* ── Buttons ── */
+    .btn-add {
+      width: 100%; margin-top: 14px; background: rgba(108,99,255,.1);
+      border: 1px dashed rgba(108,99,255,.4); color: var(--accent2); font-family: inherit;
+      font-size: 14px; font-weight: 600; padding: 11px; border-radius: 10px;
+      cursor: pointer; transition: background .2s, border-color .2s;
+    }
+    .btn-add:hover { background: rgba(108,99,255,.2); border-color: var(--accent1); }
+
+    .btn-screen {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; margin-top: 28px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      border: none; border-radius: 12px; color: #fff; font-family: inherit;
+      font-size: 16px; font-weight: 700; padding: 16px; cursor: pointer;
+      box-shadow: 0 4px 24px rgba(108,99,255,.4);
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-screen::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+      opacity: 0; transition: opacity .2s;
+    }
+    .btn-screen:hover::before { opacity: 1; }
+    .btn-screen:hover { transform: translateY(-1px); box-shadow: 0 8px 32px rgba(108,99,255,.5); }
+    .btn-screen:active { transform: translateY(1px); }
+    .btn-screen:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none;
+    }
+
+    /* ── Results ── */
+    #results-section { display: none; margin-top: 36px; }
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .results-title { font-size: 20px; font-weight: 700; }
+    .results-meta { font-size: 13px; color: var(--muted); }
+
+    .result-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow);
+      animation: slideIn .3s ease both; transition: border-color .2s, transform .2s;
+    }
+    .result-card:hover { border-color: rgba(108,99,255,.3); transform: translateY(-2px); }
+    .result-card.rank-1 { border-color: rgba(52,211,153,.35); box-shadow: var(--shadow), 0 0 0 1px rgba(52,211,153,.15); }
+
+    .result-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .candidate-name { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .rank-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .06em; }
+    .rank-1 .rank-badge { background: rgba(52,211,153,.2);  color: var(--accent3); }
+    .rank-2 .rank-badge { background: rgba(108,99,255,.2);  color: var(--accent2); }
+    .rank-3 .rank-badge { background: rgba(251,191,36,.2);  color: var(--amber); }
+    .rank-n .rank-badge { background: rgba(100,116,139,.2); color: var(--muted); }
+
+    .score-block { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .score-value { font-size: 32px; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+    .score-bar-wrap { width: 100%; height: 6px; background: rgba(255,255,255,.07); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+    .score-bar { height: 100%; border-radius: 999px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .tag { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 999px; display: inline-block; }
+    .tag-match { background: rgba(52,211,153,.15); color: var(--accent3); border: 1px solid rgba(52,211,153,.25); }
+    .tag-miss  { background: rgba(248,113,113,.12); color: var(--danger);  border: 1px solid rgba(248,113,113,.25); }
+    .tag-none  { color: var(--muted); font-style: italic; font-size: 12px; }
+
+    .explanation { font-size: 14px; line-height: 1.7; color: #94a3b8; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 4px; }
+
+    #error-box {
+      display: none; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3);
+      border-radius: 10px; padding: 14px 18px; color: var(--danger); font-size: 14px; margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">Embedding-Powered AI</div>
+  <h1>Smart Resume Screener</h1>
+  <p class="subtitle">Upload PDF resumes or paste text, add a job description, and get AI-ranked results with match scores and skill gap analysis.</p>
+</header>
+
+<main>
+  <div class="grid">
+
+    <!-- Left: Job Description -->
+    <div class="card">
+      <div class="card-title"><span>📋</span> Job Description</div>
+      <label for="jd-input">Paste the full job description</label>
+      <textarea id="jd-input" placeholder="We are looking for a Senior Python Backend Engineer with 4+ years of experience in FastAPI, PostgreSQL, Docker, AWS..."></textarea>
+    </div>
+
+    <!-- Right: Resumes -->
+    <div class="card">
+      <div class="card-title"><span>📄</span> Resumes</div>
+      <div id="resume-list"></div>
+      <button class="btn-add" onclick="addResume()">＋ Add Another Resume</button>
+    </div>
+
+  </div>
+
+  <button class="btn-screen" id="btn-screen" onclick="runScreening()">
+    <span id="btn-icon">✦</span>
+    <span id="btn-text">Screen Resumes</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
+
+  <div id="error-box"></div>
+
+  <div id="results-section">
+    <div class="results-header">
+      <div class="results-title">🏆 Screening Results</div>
+      <div class="results-meta" id="results-meta"></div>
+    </div>
+    <div id="results-list"></div>
+  </div>
+</main>
+
+<script>
+  let resumeCount = 0;
+
+  function addResume(name = '', content = '') {
+    resumeCount++;
+    const idx = resumeCount;
+    const list = document.getElementById('resume-list');
+
+    const block = document.createElement('div');
+    block.className = 'resume-block';
+    block.id = `resume-${idx}`;
+    block.innerHTML = `
+      <div class="resume-header">
+        <span class="resume-num">Resume #${idx}</span>
+        <button class="btn-remove" title="Remove" onclick="removeResume(${idx})">✕</button>
+      </div>
+
+      <!-- Candidate name -->
+      <div class="mb-10">
+        <label for="name-${idx}">Candidate Name</label>
+        <input type="text" id="name-${idx}" placeholder="e.g. Alice Johnson" value="${name}"/>
+      </div>
+
+      <!-- PDF upload zone -->
+      <div class="upload-zone" id="zone-${idx}"
+           ondragover="onDragOver(event, ${idx})"
+           ondragleave="onDragLeave(event, ${idx})"
+           ondrop="onDrop(event, ${idx})">
+        <input type="file" accept="application/pdf" id="pdf-${idx}"
+               onchange="handlePdfUpload(${idx})" />
+        <div class="upload-icon">📎</div>
+        <div class="upload-text">
+          <strong>Upload PDF Resume</strong>
+          <small>Drag & drop or click to browse · PDF only</small>
+        </div>
+      </div>
+
+      <!-- Upload status -->
+      <div class="upload-status" id="status-${idx}"></div>
+
+      <!-- PDF source pill -->
+      <div class="pdf-pill" id="pill-${idx}">
+        <span>📄</span><span id="pill-name-${idx}"></span>
+      </div>
+
+      <!-- Resume text -->
+      <div>
+        <label for="content-${idx}">Resume Text <span style="color:var(--muted);font-weight:400">(auto-filled from PDF or paste manually)</span></label>
+        <textarea id="content-${idx}" style="min-height:130px" placeholder="Resume content will appear here after PDF upload, or paste directly...">${content}</textarea>
+      </div>
+    `;
+    list.appendChild(block);
+  }
+
+  function removeResume(idx) {
+    const el = document.getElementById(`resume-${idx}`);
+    if (el) el.remove();
+  }
+
+  // ── PDF Upload ─────────────────────────────────────────────
+
+  async function handlePdfUpload(idx) {
+    const input = document.getElementById(`pdf-${idx}`);
+    const file = input.files[0];
+    if (!file) return;
+    await uploadPdf(idx, file);
+  }
+
+  function onDragOver(e, idx) {
+    e.preventDefault();
+    document.getElementById(`zone-${idx}`).classList.add('dragover');
+  }
+  function onDragLeave(e, idx) {
+    document.getElementById(`zone-${idx}`).classList.remove('dragover');
+  }
+  async function onDrop(e, idx) {
+    e.preventDefault();
+    document.getElementById(`zone-${idx}`).classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      await uploadPdf(idx, file);
+    } else {
+      setUploadStatus(idx, 'error', '⚠ Only PDF files are accepted.');
+    }
+  }
+
+  async function uploadPdf(idx, file) {
+    setUploadStatus(idx, 'loading', 'Extracting text from PDF…');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch('/extract-pdf', { method: 'POST', body: formData });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        setUploadStatus(idx, 'error', '⚠ ' + (data.detail || 'Extraction failed'));
+        return;
+      }
+
+      // Fill the textarea
+      document.getElementById(`content-${idx}`).value = data.text;
+
+      // Fill name if empty (use filename without extension)
+      const nameField = document.getElementById(`name-${idx}`);
+      if (!nameField.value.trim()) {
+        nameField.value = file.name.replace(/\.pdf$/i, '').replace(/[-_]/g, ' ');
+      }
+
+      // Show pill
+      const pill = document.getElementById(`pill-${idx}`);
+      document.getElementById(`pill-name-${idx}`).textContent = `${file.name} · ${data.pages} page${data.pages !== 1 ? 's' : ''}`;
+      pill.classList.add('visible');
+
+      setUploadStatus(idx, 'success', `✓ Extracted ${data.pages} page${data.pages !== 1 ? 's' : ''} successfully`);
+      setTimeout(() => clearUploadStatus(idx), 3000);
+
+    } catch (e) {
+      setUploadStatus(idx, 'error', '⚠ Network error. Is the server running?');
+    }
+  }
+
+  function setUploadStatus(idx, type, msg) {
+    const el = document.getElementById(`status-${idx}`);
+    el.className = `upload-status ${type}`;
+    el.innerHTML = type === 'loading'
+      ? `<div class="mini-spinner"></div> ${msg}`
+      : msg;
+  }
+  function clearUploadStatus(idx) {
+    const el = document.getElementById(`status-${idx}`);
+    el.className = 'upload-status';
+    el.innerHTML = '';
+  }
+
+  // ── Screening ──────────────────────────────────────────────
+
+  async function runScreening() {
+    const jd = document.getElementById('jd-input').value.trim();
+    const errorBox = document.getElementById('error-box');
+    errorBox.style.display = 'none';
+
+    if (!jd || jd.length < 50) {
+      showError('Job description must be at least 50 characters.');
+      return;
+    }
+
+    const resumes = [];
+    document.querySelectorAll('.resume-block').forEach(block => {
+      const id = block.id.split('-')[1];
+      const name = document.getElementById(`name-${id}`)?.value.trim();
+      const content = document.getElementById(`content-${id}`)?.value.trim();
+      if (name && content) resumes.push({ name, content });
+    });
+
+    if (resumes.length === 0) {
+      showError('Please add at least one resume with a name and content (or upload a PDF).');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const resp = await fetch('/screen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_description: jd, resumes })
+      });
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || `HTTP ${resp.status}`);
+      }
+      renderResults(await resp.json());
+    } catch (e) {
+      showError(`Error: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Render results ─────────────────────────────────────────
+
+  function renderResults(data) {
+    const section = document.getElementById('results-section');
+    const list = document.getElementById('results-list');
+    section.style.display = 'block';
+    list.innerHTML = '';
+
+    const hint = data.job_title_hint ? ` · ${data.job_title_hint}` : '';
+    document.getElementById('results-meta').textContent =
+      `${data.total_resumes} candidate${data.total_resumes !== 1 ? 's' : ''} screened${hint}`;
+
+    data.results.forEach((r, i) => {
+      const rank = i + 1;
+      const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-n';
+      const rankLabel = rank === 1 ? '🥇 Top Match' : rank === 2 ? '🥈 2nd' : rank === 3 ? '🥉 3rd' : `#${rank}`;
+      const scoreColor = score2color(r.match_score);
+
+      const matchedHtml = r.matched_skills.length
+        ? r.matched_skills.map(s => `<span class="tag tag-match">${s}</span>`).join('')
+        : '<span class="tag-none">none found</span>';
+      const missingHtml = r.missing_skills.length
+        ? r.missing_skills.map(s => `<span class="tag tag-miss">${s}</span>`).join('')
+        : '<span class="tag-none">none — great coverage!</span>';
+
+      const card = document.createElement('div');
+      card.className = `result-card ${rankClass}`;
+      card.style.animationDelay = `${i * 0.07}s`;
+      card.innerHTML = `
+        <div class="result-top">
+          <div class="candidate-name">${r.name}<span class="rank-badge">${rankLabel}</span></div>
+          <div class="score-block">
+            <div class="score-value" style="color:${scoreColor}">${r.match_score}</div>
+            <div class="score-label">/ 100 match</div>
+          </div>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar" id="bar-${i}" style="width:0;background:${scoreColor}"></div>
+        </div>
+        <div class="section-label">Matched Skills</div>
+        <div class="tags">${matchedHtml}</div>
+        <div class="section-label">Missing Skills</div>
+        <div class="tags">${missingHtml}</div>
+        <div class="explanation">${r.explanation}</div>
+      `;
+      list.appendChild(card);
+      requestAnimationFrame(() => setTimeout(() => {
+        const bar = document.getElementById(`bar-${i}`);
+        if (bar) bar.style.width = r.match_score + '%';
+      }, 50 + i * 70));
+    });
+
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function score2color(s) {
+    if (s >= 75) return '#34d399';
+    if (s >= 50) return '#a78bfa';
+    if (s >= 30) return '#fbbf24';
+    return '#f87171';
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('btn-screen');
+    document.getElementById('btn-icon').style.display = on ? 'none' : 'inline';
+    document.getElementById('btn-text').textContent = on ? 'Screening…' : 'Screen Resumes';
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    btn.disabled = on;
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    box.textContent = '⚠ ' + msg;
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Start with one resume block
+  addResume();
+</script>
+</body>
+</html>
